@@ -376,7 +376,8 @@ class HierarchyADOsState:
             idx = idx_or_label
         else:
             idx = self._ados.idx(idx_or_label)
-        return Qobj(self._ado_state[idx, :].T, dims=self.rho.dims)
+        #return Qobj(self._ado_state[idx, :].T, dims=self.rho.dims)
+        return Qobj(self._ado_state[idx, :], dims=self.rho.dims)
 
 
 class HEOMResult(Result):
@@ -970,7 +971,8 @@ class HEOMSolver(Solver):
         data = _data.mul(_data.add(data, data.adjoint()), 0.5)
         steady_state = Qobj(data, dims=self._sys_dims)
 
-        solution = solution.reshape((self._n_ados, n, n))
+        #solution = solution.reshape((self._n_ados, n, n))
+        solution = solution.reshape((self._n_ados, n, n)).transpose(0,2,1)
         steady_ados = HierarchyADOsState(steady_state, self.ados, solution)
 
         return steady_state, steady_ados
@@ -1096,7 +1098,7 @@ class HEOMSolver(Solver):
             dims=rho_dims,
         )
         ado_state = HierarchyADOsState(
-            rho, self.ados, state.to_array().reshape(hierarchy_shape)
+            rho, self.ados, state.to_array().reshape(hierarchy_shape).transpose(0,2,1) 
         )
         return ado_state
 
