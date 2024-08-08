@@ -747,6 +747,26 @@ class HEOMSolver(Solver):
                 he_n[k] * self.ados.ck2[k],
             )
             op = _data.add(term1, term2)
+        elif self.ados.exponents[k].type == BathExponent.types.Rin:
+            op = _data.mul(
+                self._s_pre_minus_post_Q[k],
+                -1j * he_n[k] * self.ados.ck[k],
+            )
+        elif self.ados.exponents[k].type == BathExponent.types.Iin:
+            op = _data.mul(
+                self._s_pre_plus_post_Q[k],
+                -1j * he_n[k] * 1j * self.ados.ck[k],
+            )
+        elif self.ados.exponents[k].type == BathExponent.types.Rout:
+            op = _data.mul(
+                self._s_pre_minus_post_Q[k],
+                -1j * he_n[k] * self.ados.ck[k],
+            )
+        elif self.ados.exponents[k].type == BathExponent.types.Iout:
+            op = _data.mul(
+                self._s_pre_plus_post_Q[k],
+                -1j * he_n[k] * 1j * self.ados.ck[k],
+            )
         else:
             raise ValueError(
                 f"Unsupported type {self.ados.exponents[k].type}"

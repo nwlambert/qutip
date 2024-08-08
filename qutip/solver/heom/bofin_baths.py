@@ -97,7 +97,7 @@ class BathExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Rin", "Iin", "Rout", "Iout"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
@@ -242,10 +242,12 @@ class BosonicBath(Bath):
             raise ValueError("The coupling operator Q must be a Qobj.")
 
     def __init__(
-            self, Q, ck_real, vk_real, ck_imag, vk_imag, combine=True,
+            self, Q, ck_real, vk_real, ck_imag, vk_imag, 
+            ck_real_input=None, vk_real_input=None, ck_imag_input=None, vk_imag_input=None, 
+            ck_real_output=None, vk_real_output=None, ck_imag_output=None, vk_imag_output=None, combine=True,
             tag=None,
     ):
-        self._check_cks_and_vks(ck_real, vk_real, ck_imag, vk_imag)
+        self._check_cks_and_vks(ck_real, vk_real, ck_imag, vk_imag)  #TODO: add input/output checks
         self._check_coup_op(Q)
 
         exponents = []
@@ -256,6 +258,28 @@ class BosonicBath(Bath):
         exponents.extend(
             BathExponent("I", None, Q, ck, vk, tag=tag)
             for ck, vk in zip(ck_imag, vk_imag)
+        )
+        
+        exponents.extend(
+            BathExponent("Rin", None, Q, ck, vk, tag=tag)
+            for ck, vk in zip(ck_real_input, vk_real_input)
+        )
+
+        
+        exponents.extend(
+            BathExponent("Iin", None, Q, ck, vk, tag=tag)
+            for ck, vk in zip(ck_imag_input, vk_imag_input)
+        )
+        
+        exponents.extend(
+            BathExponent("Rout", None, Q, ck, vk, tag=tag)
+            for ck, vk in zip(ck_real_output, vk_real_output)
+        )
+
+        
+        exponents.extend(
+            BathExponent("Iout", None, Q, ck, vk, tag=tag)
+            for ck, vk in zip(ck_imag_output, vk_imag_output)
         )
 
         if combine:
