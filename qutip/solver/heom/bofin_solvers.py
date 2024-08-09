@@ -637,28 +637,28 @@ class HEOMSolver(Solver):
         _time_start = time()
 
         # pre-calculate identity matrix required by _grad_n
-        self._sId = _data.identity(self._sup_shape, dtype="csr")
+        self._sId = Qobj(_data.identity(self._sup_shape, dtype="csr"),dims = self.L_sys.dims, superrep='super')
 
         # pre-calculate superoperators required by _grad_prev and _grad_next:
-        Qs = [exp.Q.to("csr") for exp in self.ados.exponents]
-        self._spreQ = [spre(op).data for op in Qs]
-        self._spostQ = [spost(op).data for op in Qs]
+        Qs = [exp.Q for exp in self.ados.exponents]
+        self._spreQ = [spre(op) for op in Qs]
+        self._spostQ = [spost(op) for op in Qs]
         self._s_pre_minus_post_Q = [
-            _data.sub(self._spreQ[k], self._spostQ[k])
+            (self._spreQ[k]-self._spostQ[k])
             for k in range(self._n_exponents)
         ]
         self._s_pre_plus_post_Q = [
-            _data.add(self._spreQ[k], self._spostQ[k])
+            (self._spreQ[k] + self._spostQ[k])
             for k in range(self._n_exponents)
         ]
-        self._spreQdag = [spre(op.dag()).data for op in Qs]
-        self._spostQdag = [spost(op.dag()).data for op in Qs]
+        self._spreQdag = [spre(op.dag()) for op in Qs]
+        self._spostQdag = [spost(op.dag()) for op in Qs]
         self._s_pre_minus_post_Qdag = [
-            _data.sub(self._spreQdag[k], self._spostQdag[k])
+            (self._spreQdag[k] - self._spostQdag[k])
             for k in range(self._n_exponents)
         ]
         self._s_pre_plus_post_Qdag = [
-            _data.add(self._spreQdag[k], self._spostQdag[k])
+            (self._spreQdag[k] - self._spostQdag[k])
             for k in range(self._n_exponents)
         ]
 
@@ -716,7 +716,7 @@ class HEOMSolver(Solver):
         """ Get the gradient for the hierarchy ADO at level n. """
         vk = self.ados.vk
         vk_sum = sum(he_n[i] * vk[i] for i in range(len(vk)))
-        op = _data.mul(self._sId, -vk_sum)
+        op = self._sId * (-vk_sum)
         return op
 
     def _grad_prev(self, he_n, k):
@@ -728,44 +728,44 @@ class HEOMSolver(Solver):
 
     def _grad_prev_bosonic(self, he_n, k):
         if self.ados.exponents[k].type == BathExponent.types.R:
-            op = _data.mul(
-                self._s_pre_minus_post_Q[k],
-                -1j * he_n[k] * self.ados.ck[k],
+            op = (
+                self._s_pre_minus_post_Q[k] *
+                -1j * he_n[k] * self.ados.ck[k]
             )
         elif self.ados.exponents[k].type == BathExponent.types.I:
-            op = _data.mul(
-                self._s_pre_plus_post_Q[k],
-                -1j * he_n[k] * 1j * self.ados.ck[k],
+            op = (
+                self._s_pre_plus_post_Q[k] *
+                -1j * he_n[k] * 1j * self.ados.ck[k]
             )
         elif self.ados.exponents[k].type == BathExponent.types.RI:
-            term1 = _data.mul(
-                self._s_pre_minus_post_Q[k],
-                he_n[k] * -1j * self.ados.ck[k],
+            term1 = (
+                self._s_pre_minus_post_Q[k] *
+                he_n[k] * -1j * self.ados.ck[k]
             )
-            term2 = _data.mul(
-                self._s_pre_plus_post_Q[k],
-                he_n[k] * self.ados.ck2[k],
+            term2 = (
+                self._s_pre_plus_post_Q[k] *
+                he_n[k] * self.ados.ck2[k]
             )
-            op = _data.add(term1, term2)
+            op = term1+term2
         elif self.ados.exponents[k].type == BathExponent.types.Rin:
-            op = _data.mul(
-                self._s_pre_minus_post_Q[k],
-                -1j * he_n[k] * self.ados.ck[k],
+            op = (
+                QobjEvo([self._s_pre_minus_post_Q[k] *
+                + he_n[k], self.ados.ck[k]])
             )
         elif self.ados.exponents[k].type == BathExponent.types.Iin:
-            op = _data.mul(
-                self._s_pre_plus_post_Q[k],
-                -1j * he_n[k] * 1j * self.ados.ck[k],
+            op = (
+                self._s_pre_plus_post_Q[k] *
+                -1j * he_n[k] * 1j * self.ados.ck[k]
             )
         elif self.ados.exponents[k].type == BathExponent.types.Rout:
-            op = _data.mul(
-                self._s_pre_minus_post_Q[k],
-                -1j * he_n[k] * self.ados.ck[k],
+            op =(
+                self._s_pre_minus_post_Q[k] *
+                -1j * he_n[k] * self.ados.ck[k]
             )
         elif self.ados.exponents[k].type == BathExponent.types.Iout:
-            op = _data.mul(
-                self._s_pre_plus_post_Q[k],
-                -1j * he_n[k] * 1j * self.ados.ck[k],
+            op = (
+                self._s_pre_plus_post_Q[k] *
+                -1j * he_n[k] * 1j * self.ados.ck[k]
             )
         else:
             raise ValueError(
@@ -790,20 +790,20 @@ class HEOMSolver(Solver):
         sigma_bar_k = k + self.ados.sigma_bar_k_offset[k]
 
         if self.ados.exponents[k].type == BathExponent.types["+"]:
-            op = _data.sub(
-                _data.mul(self._spreQdag[k], -1j * sign2 * ck[k]),
-                _data.mul(
-                    self._spostQdag[k],
-                    -1j * sign2 * sign1 * np.conj(ck[sigma_bar_k]),
-                ),
+            op = (
+                (self._spreQdag[k]+1j * sign2 * ck[k]) *
+                (
+                    self._spostQdag[k] -
+                    -1j * sign2 * sign1 * np.conj(ck[sigma_bar_k])
+                )
             )
         elif self.ados.exponents[k].type == BathExponent.types["-"]:
             op = _data.sub(
-                _data.mul(self._spreQ[k], -1j * sign2 * ck[k]),
-                _data.mul(
-                    self._spostQ[k],
-                    -1j * sign2 * sign1 * np.conj(ck[sigma_bar_k]),
-                ),
+                (self._spreQ[k] * -1j * sign2 * ck[k]) -
+                (
+                    self._spostQ[k] *
+                    -1j * sign2 * sign1 * np.conj(ck[sigma_bar_k])
+                )
             )
         else:
             raise ValueError(
@@ -820,8 +820,11 @@ class HEOMSolver(Solver):
             return self._grad_next_bosonic(he_n, k)
 
     def _grad_next_bosonic(self, he_n, k):
-        op = _data.mul(self._s_pre_minus_post_Q[k], -1j)
-        return op
+        if self.ados.exponents[k].type != BathExponent.types.Rin:
+            op = (self._s_pre_minus_post_Q[k]* -1j)
+            return op
+        else: 
+            return None
 
     def _grad_next_fermionic(self, he_n, k):
         he_fermionic_n = [
@@ -836,14 +839,14 @@ class HEOMSolver(Solver):
 
         if self.ados.exponents[k].type == BathExponent.types["+"]:
             if sign1 == -1:
-                op = _data.mul(self._s_pre_minus_post_Q[k], -1j * sign2)
+                op = (self._s_pre_minus_post_Q[k] * -1j * sign2)
             else:
-                op = _data.mul(self._s_pre_plus_post_Q[k], -1j * sign2)
+                op = (self._s_pre_plus_post_Q[k] * -1j * sign2)
         elif self.ados.exponents[k].type == BathExponent.types["-"]:
             if sign1 == -1:
-                op = _data.mul(self._s_pre_minus_post_Qdag[k], -1j * sign2)
+                op = (self._s_pre_minus_post_Qdag[k] * -1j * sign2)
             else:
-                op = _data.mul(self._s_pre_plus_post_Qdag[k], -1j * sign2)
+                op = (self._s_pre_plus_post_Qdag[k] * -1j * sign2)
         else:
             raise ValueError(
                 f"Unsupported type {self.ados.exponents[k].type}"
@@ -853,8 +856,11 @@ class HEOMSolver(Solver):
 
     def _rhs(self):
         """ Make the RHS for the HEOM. """
+        rhs_dims = [
+            [self._sup_shape * self._n_ados], [self._sup_shape * self._n_ados]
+        ]
         ops = _GatherHEOMRHS(
-            self.ados.idx, block=self._sup_shape, nhe=self._n_ados
+            self.ados.idx, block=self._sup_shape, nhe=self._n_ados, rhs_dims=rhs_dims
         )
 
         for he_n in self.ados.labels:
@@ -864,12 +870,13 @@ class HEOMSolver(Solver):
                 next_he = self.ados.next(he_n, k)
                 if next_he is not None:
                     op = self._grad_next(he_n, k)
-                    ops.add_op(he_n, next_he, op)
+                    if op is not None:
+                        ops.add_op(he_n, next_he, op)
                 prev_he = self.ados.prev(he_n, k)
                 if prev_he is not None:
                     op = self._grad_prev(he_n, k)
                     ops.add_op(he_n, prev_he, op)
-
+           
         return ops.gather()
 
     def _calculate_rhs(self):
@@ -883,8 +890,8 @@ class HEOMSolver(Solver):
         if self.L_sys.isconstant:
             # For the constant case, we just add the Liouvillian to the
             # diagonal blocks of the RHS matrix.
-            rhs_mat += _data.kron(h_identity, self.L_sys(0).to("csr").data)
-            rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims))
+            rhs_mat += Qobj(_data.kron(h_identity, self.L_sys(0).to("csr").data), dims=rhs_dims)
+            rhs = QobjEvo(rhs_mat)
         else:
             # In the time dependent case, we construct the parameters
             # for the ODE gradient function under the assumption that
@@ -895,7 +902,7 @@ class HEOMSolver(Solver):
             # This assumption holds because only _grad_n dependents on
             # the system Liouvillian (and not _grad_prev or _grad_next) and
             # the bath coupling operators are not time-dependent.
-            rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims))
+            rhs = rhs_mat#QobjEvo(Qobj(rhs_mat, dims=rhs_dims))
 
             def _kron(x):
                 return Qobj(
@@ -909,7 +916,7 @@ class HEOMSolver(Solver):
         # check on the RHS creation. The base solver class will still
         # convert the RHS to the type required by the ODE integrator if
         # needed.
-        assert isinstance(rhs_mat, _csr.CSR)
+        #assert isinstance(rhs_mat, _csr.CSR)
         assert isinstance(rhs, QobjEvo)
         assert rhs.dims == rhs_dims
 
@@ -1310,11 +1317,14 @@ class _GatherHEOMRHS:
         nhe : int
             The number of ADOs in the hierarchy.
     """
-    def __init__(self, f_idx, block, nhe):
+    def __init__(self, f_idx, block, nhe, rhs_dims):
         self._block_size = block
         self._n_blocks = nhe
         self._f_idx = f_idx
         self._ops = []
+        self._rhs_dims = rhs_dims
+
+        
 
     def add_op(self, row_he, col_he, op):
         """ Add an block operator to the list. """
@@ -1341,12 +1351,19 @@ class _GatherHEOMRHS:
                 A combined matrix of shape ``(block * nhe, block * ne)``.
         """
         self._ops.sort()
-        ops = np.array(self._ops, dtype=[
-            ("row", _data.base.idxint_dtype),
-            ("col", _data.base.idxint_dtype),
-            ("op", _data.CSR),
-        ])
-        return _csr._from_csr_blocks(
-            ops["row"], ops["col"], ops["op"],
-            self._n_blocks, self._block_size,
-        )
+    
+        
+        
+        def _sum(op, loc):
+            def _kron(x):
+                return Qobj(
+                    _data.kron(loc, x.data),
+                    dims=self._rhs_dims,
+                ).to("csr")
+            
+            return op.linear_map(_kron)
+            
+        return np.sum([_sum(QobjEvo(op),_data.one_element_csr((self._n_blocks, self._n_blocks), (row, col))) for row, col, op in self._ops]) 
+        #rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims))
+
+        

@@ -260,31 +260,33 @@ class BosonicBath(Bath):
             for ck, vk in zip(ck_imag, vk_imag)
         )
         
-        exponents.extend(
-            BathExponent("Rin", None, Q, ck, vk, tag=tag)
-            for ck, vk in zip(ck_real_input, vk_real_input)
-        )
-
-        
-        exponents.extend(
-            BathExponent("Iin", None, Q, ck, vk, tag=tag)
-            for ck, vk in zip(ck_imag_input, vk_imag_input)
-        )
-        
-        exponents.extend(
-            BathExponent("Rout", None, Q, ck, vk, tag=tag)
-            for ck, vk in zip(ck_real_output, vk_real_output)
-        )
-
-        
-        exponents.extend(
-            BathExponent("Iout", None, Q, ck, vk, tag=tag)
-            for ck, vk in zip(ck_imag_output, vk_imag_output)
-        )
 
         if combine:
             exponents = self.combine(exponents)
+        
+        if ck_real_input is not None:
+            exponents.extend(
+                BathExponent("Rin", 2, Q, ck_real_input[0], vk_real_input[0], tag=tag)
+                for ck, vk in zip(ck_real_input, vk_real_input)
+            )
 
+        if ck_imag_input is not None:
+            exponents.extend(
+                BathExponent("Iin", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_imag_input, vk_imag_input)
+            )
+
+        if ck_real_output is not None:
+            exponents.extend(
+                BathExponent("Rout", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_real_output, vk_real_output)
+            )
+
+        if ck_imag_output is not None:    
+            exponents.extend(
+                BathExponent("Iout", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_imag_output, vk_imag_output)
+            )
         super().__init__(exponents)
 
     @classmethod
