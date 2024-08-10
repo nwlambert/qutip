@@ -266,7 +266,7 @@ class BosonicBath(Bath):
         
         if ck_real_input is not None:
             exponents.extend(
-                BathExponent("Rin", 2, Q, ck_real_input[0], vk_real_input[0], tag=tag)
+                BathExponent("Rin", 2, Q, ck, vk, tag=tag)
                 for ck, vk in zip(ck_real_input, vk_real_input)
             )
 

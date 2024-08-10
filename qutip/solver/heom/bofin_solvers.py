@@ -750,7 +750,7 @@ class HEOMSolver(Solver):
         elif self.ados.exponents[k].type == BathExponent.types.Rin:
             op = (
                 QobjEvo([self._s_pre_minus_post_Q[k] *
-                + he_n[k], self.ados.ck[k]])
+                 he_n[k], self.ados.ck[k]])
             )
         elif self.ados.exponents[k].type == BathExponent.types.Iin:
             op = (
@@ -820,7 +820,7 @@ class HEOMSolver(Solver):
             return self._grad_next_bosonic(he_n, k)
 
     def _grad_next_bosonic(self, he_n, k):
-        if self.ados.exponents[k].type != BathExponent.types.Rin:
+        if self.ados.exponents[k].type != BathExponent.types.Rin:  #need to repeat this for all inputs
             op = (self._s_pre_minus_post_Q[k]* -1j)
             return op
         else: 
