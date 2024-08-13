@@ -97,7 +97,7 @@ class BathExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Rin", "Iin", "Rout", "Iout"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
@@ -243,8 +243,7 @@ class BosonicBath(Bath):
 
     def __init__(
             self, Q, ck_real, vk_real, ck_imag, vk_imag, 
-            ck_real_input=None, vk_real_input=None, ck_imag_input=None, vk_imag_input=None, 
-            ck_real_output=None, vk_real_output=None, ck_imag_output=None, vk_imag_output=None, combine=True,
+            ck_input=None, ck_output=None, vk_output=None, combine=True,
             tag=None,
     ):
         self._check_cks_and_vks(ck_real, vk_real, ck_imag, vk_imag)  #TODO: add input/output checks
@@ -264,29 +263,20 @@ class BosonicBath(Bath):
         if combine:
             exponents = self.combine(exponents)
         
-        if ck_real_input is not None:
+        if ck_input is not None:
             exponents.extend(
-                BathExponent("Rin", 2, Q, ck, vk, tag=tag)
-                for ck, vk in zip(ck_real_input, vk_real_input)
+                BathExponent("Input", 2, Q, ck, 0., tag=tag)
+                for ck in ck_input
             )
 
-        if ck_imag_input is not None:
+        
+        if ck_output is not None:
             exponents.extend(
-                BathExponent("Iin", 2, Q, ck, vk, tag=tag)
-                for ck, vk in zip(ck_imag_input, vk_imag_input)
+                BathExponent("Output", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output, vk_output)
             )
 
-        if ck_real_output is not None:
-            exponents.extend(
-                BathExponent("Rout", 2, Q, ck, vk, tag=tag)
-                for ck, vk in zip(ck_real_output, vk_real_output)
-            )
-
-        if ck_imag_output is not None:    
-            exponents.extend(
-                BathExponent("Iout", 2, Q, ck, vk, tag=tag)
-                for ck, vk in zip(ck_imag_output, vk_imag_output)
-            )
+        
         super().__init__(exponents)
 
     @classmethod

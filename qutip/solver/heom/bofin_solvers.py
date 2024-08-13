@@ -747,26 +747,18 @@ class HEOMSolver(Solver):
                 he_n[k] * self.ados.ck2[k]
             )
             op = term1+term2
-        elif self.ados.exponents[k].type == BathExponent.types.Rin:
+        elif self.ados.exponents[k].type == BathExponent.types.Input:
             op = (
                 QobjEvo([self._s_pre_minus_post_Q[k] *
                  he_n[k], self.ados.ck[k]])
             )
-        elif self.ados.exponents[k].type == BathExponent.types.Iin:
-            op = (
-                self._s_pre_plus_post_Q[k] *
-                -1j * he_n[k] * 1j * self.ados.ck[k]
-            )
-        elif self.ados.exponents[k].type == BathExponent.types.Rout:
+        
+        elif self.ados.exponents[k].type == BathExponent.types.Output:
             op =(
                 self._s_pre_minus_post_Q[k] *
                 -1j * he_n[k] * self.ados.ck[k]
             )
-        elif self.ados.exponents[k].type == BathExponent.types.Iout:
-            op = (
-                self._s_pre_plus_post_Q[k] *
-                -1j * he_n[k] * 1j * self.ados.ck[k]
-            )
+        
         else:
             raise ValueError(
                 f"Unsupported type {self.ados.exponents[k].type}"
@@ -820,7 +812,8 @@ class HEOMSolver(Solver):
             return self._grad_next_bosonic(he_n, k)
 
     def _grad_next_bosonic(self, he_n, k):
-        if self.ados.exponents[k].type != BathExponent.types.Rin:  #need to repeat this for all inputs
+        if (self.ados.exponents[k].type != BathExponent.types.Input and
+            self.ados.exponents[k].type != BathExponent.types.Output):              
             op = (self._s_pre_minus_post_Q[k]* -1j)
             return op
         else: 
@@ -1362,8 +1355,11 @@ class _GatherHEOMRHS:
                 ).to("csr")
             
             return op.linear_map(_kron)
-            
+    
         return np.sum([_sum(QobjEvo(op),_data.one_element_csr((self._n_blocks, self._n_blocks), (row, col))) for row, col, op in self._ops]) 
+        
+        #def _sum_vectorized(ops, n_blocks, rhs_dims):
+
         #rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims))
 
         
