@@ -1324,7 +1324,36 @@ class _GatherHEOMRHS:
         self._ops.append(
             (self._f_idx(row_he), self._f_idx(col_he), op)
         )
+        
+    def gather2(self):
+        """ Create the HEOM liouvillian from a sorted list of smaller sparse
+            matrices.
 
+            .. note::
+
+                The list of operators contains tuples of the form
+                ``(row_idx, col_idx, op)``. The row_idx and col_idx give the
+                *block* row and column for each op. An operator with
+                block indices ``(N, M)`` is placed at position
+                ``[N * block: (N + 1) * block, M * block: (M + 1) * block]``
+                in the output matrix.
+
+            Returns
+            -------
+            rhs : :obj:`Data`
+                A combined matrix of shape ``(block * nhe, block * ne)``.
+        """
+        self._ops.sort()
+        ops = np.array(self._ops, dtype=[
+            ("row", _data.base.idxint_dtype),
+            ("col", _data.base.idxint_dtype),
+            ("op", _data.CSR),
+        ])
+        return _csr._from_csr_blocks(
+            ops["row"], ops["col"], ops["op"],
+            self._n_blocks, self._block_size,
+        )
+    
     def gather(self):
         """ Create the HEOM liouvillian from a sorted list of smaller sparse
             matrices.
@@ -1344,9 +1373,15 @@ class _GatherHEOMRHS:
                 A combined matrix of shape ``(block * nhe, block * ne)``.
         """
         self._ops.sort()
+        ops = np.array(self._ops, dtype=[
+            ("row", _data.base.idxint_dtype),
+            ("col", _data.base.idxint_dtype),
+            ("op", _data.CSR),
+        ])
+        
+   
     
-        
-        
+    
         def _sum(op, loc):
             def _kron(x):
                 return Qobj(
@@ -1355,8 +1390,18 @@ class _GatherHEOMRHS:
                 ).to("csr")
             
             return op.linear_map(_kron)
-    
+ 
+        def _sum2(op, row, col):
+            def _insert(x):
+                return Qobj(_csr._from_csr_blocks(
+                    np.array([row],dtype= _data.base.idxint_dtype), np.array([col],dtype= _data.base.idxint_dtype), np.array([x.data],dtype=_data.CSR),
+                    self._n_blocks, self._block_size,
+                    ),dims=self._rhs_dims)
+       
+            return op.linear_map(_insert)
         return np.sum([_sum(QobjEvo(op),_data.one_element_csr((self._n_blocks, self._n_blocks), (row, col))) for row, col, op in self._ops]) 
+        #return np.sum([_sum2(QobjEvo(op),row,col) for row, col, op in ops]) 
+        #return QobjEvo(ops["op"][0]).batch_linear_map(ops, self._rhs_dims, self._n_blocks)
         
         #def _sum_vectorized(ops, n_blocks, rhs_dims):
 
