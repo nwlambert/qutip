@@ -657,7 +657,7 @@ class HEOMSolver(Solver):
 
         
         self._s_pre_minus_post_Qdag = [
-            _data.sub(self._spreQdag[k], self._spostQdag[k]))
+            _data.sub(self._spreQdag[k], self._spostQdag[k])
             for k in range(self._n_exponents)
         ]
         self._s_pre_plus_post_Qdag = [
@@ -754,19 +754,25 @@ class HEOMSolver(Solver):
             )
 
             op = _data.add(term1, term2)
+        
         elif self.ados.exponents[k].type == BathExponent.types.Input:
             op = _data.mul(
                 self._s_pre_minus_post_Q[k],
                 he_n[k],
             )  #omit ck here, it is included in ops_td
 
-        
-        elif self.ados.exponents[k].type == BathExponent.types.Output:
+        elif self.ados.exponents[k].type == BathExponent.types.Output_L:
             op = _data.mul(
-                self._s_pre_minus_post_Q[k],
+                self._spreQ[k],
                 he_n[k] * self.ados.ck[k],
             )
-        
+            
+        elif self.ados.exponents[k].type == BathExponent.types.Output_R:
+            op = _data.mul(
+                self._spostQ[k],
+                -he_n[k] * self.ados.ck[k],
+            )
+            
         else:
             raise ValueError(
                 f"Unsupported type {self.ados.exponents[k].type}"
@@ -821,7 +827,8 @@ class HEOMSolver(Solver):
 
     def _grad_next_bosonic(self, he_n, k):
         if (self.ados.exponents[k].type != BathExponent.types.Input and
-            self.ados.exponents[k].type != BathExponent.types.Output):              
+            self.ados.exponents[k].type != BathExponent.types.Output_L and
+            self.ados.exponents[k].type != BathExponent.types.Output_R):
             op = _data.mul(self._s_pre_minus_post_Q[k], -1j) #op = (self._s_pre_minus_post_Q[k]* -1j)
             return op
         else: 
@@ -1339,7 +1346,7 @@ class _GatherHEOMRHS:
             )
         else:
             self._ops_td.append(
-            (self._f_idx(row_he), self._f_idx(col_he), op, ck_td_factor)
+            (self._f_idx(row_he), self._f_idx(col_he), op, ck_td_factor)  #try with CSR blocks for all ck
         )
         
     def gather(self):

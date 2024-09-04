@@ -97,7 +97,7 @@ class BathExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input",                  "Output_L", "Output_R"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
@@ -243,7 +243,8 @@ class BosonicBath(Bath):
 
     def __init__(
             self, Q, ck_real, vk_real, ck_imag, vk_imag, 
-            ck_input=None, ck_output=None, vk_output=None, combine=True,
+            ck_input=None, ck_output_L=None, vk_output_L=None,
+            ck_output_R=None, vk_output_R=None, combine=True,
             tag=None,
     ):
         self._check_cks_and_vks(ck_real, vk_real, ck_imag, vk_imag)  #TODO: add input/output checks
@@ -269,14 +270,19 @@ class BosonicBath(Bath):
                 for ck in ck_input
             )
 
-        
-        if ck_output is not None:
+        if ck_output_L is not None:
             exponents.extend(
-                BathExponent("Output", 2, Q, ck, vk, tag=tag)
-                for ck, vk in zip(ck_output, vk_output)
+                BathExponent("Output_L", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_L, vk_output_L)
             )
 
-        
+        if ck_output_R is not None:
+            exponents.extend(
+                BathExponent("Output_R", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_R, vk_output_R)
+            )
+
+
         super().__init__(exponents)
 
     @classmethod
