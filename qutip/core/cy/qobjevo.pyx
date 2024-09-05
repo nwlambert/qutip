@@ -2,7 +2,7 @@
 #cython: boundscheck=False, wraparound=False, initializedcheck=False, cdvision=True
 
 import numpy as np
-cimport numpy as cnp
+
 import numbers
 import itertools
 from functools import partial
@@ -18,18 +18,12 @@ from qutip.settings import settings
 
 from qutip.core.cy._element cimport _BaseElement
 from qutip.core.data cimport Dense, Data, dense
-from qutip.core.data cimport csr as _csr
 from qutip.core.data.expect cimport *
 from qutip.core.data.reshape cimport (column_stack_dense, column_unstack_dense)
 from qutip.core.cy.coefficient cimport Coefficient
 from libc.math cimport fabs
-cnp.import_array()
 __all__ = ['QobjEvo']
-cdef QobjEvo _insert(cnp.ndarray row_buffer, cnp.ndarray col_buffer, cnp.ndarray data_buffer, int n_blocks, int block_size, list rhs_dims):
-        return QobjEvo(Qob(_csr._from_csr_blocks(
-            row_buffer, col_buffer, data_buffer,
-            n_blocks, block_size
-        ), dims=rhs_dims))
+
 
 cdef class QobjEvo:
     """
@@ -812,41 +806,7 @@ cdef class QobjEvo:
 
         return res           
         
-    def batch_linear_map(self, ops, rhs_dims, n_blocks, block_size,  *, _skip_check=False):
-        """
-      
-        """
-        cdef cnp.int32_t[:] row_array
-        cdef cnp.int32_t[:] col_array
-        cdef _csr.CSR[:] op_array
-        ops.sort()
-        ops = np.array(ops, dtype=[
-            ("row", _data.base.idxint_dtype),
-            ("col", _data.base.idxint_dtype),
-            ("op", _csr.CSR),
-        ])
-        cdef cnp.ndarray row_buffer = np.empty(1, dtype=_data.base.idxint_dtype)
-        cdef cnp.ndarray col_buffer = np.empty(1, dtype=_data.base.idxint_dtype)
-        cdef cnp.ndarray data_buffer = np.empty(1, dtype=_data.CSR)
-        
-     
-        def _sum2(op, row, col):
-            # Fill pre-allocated buffers with current data
-            row_buffer[0] = row
-            col_buffer[0] = col
-            data_buffer[0] = op.data
-            
-            # Perform the block insertion and return the result
-            return op.linear_map(lambda x: _insert(row_buffer, col_buffer, data_buffer, n_blocks, block_size, rhs_dims)(0))
 
-        cdef QobjEvo res = 0. * QobjEvo(ops["op"][0])
-        for op_struct in ops:
-            row = op_struct['row']
-            col = op_struct['col']
-            op = op_struct['op']
-            res += _sum2(QobjEvo(op), row, col)
-        
-        #return np.sum([_sum2(QobjEvo(op),row,col) for row, col, op in ops]) 
 
     ###########################################################################
     # Cleaning and compress                                                   #

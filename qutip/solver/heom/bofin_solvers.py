@@ -11,7 +11,7 @@ implementation in QuTiP itself.
 """
 
 from time import time
-
+from itertools import groupby
 import numpy as np
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
@@ -770,7 +770,7 @@ class HEOMSolver(Solver):
         elif self.ados.exponents[k].type == BathExponent.types.Output_R:
             op = _data.mul(
                 self._spostQ[k],
-                -he_n[k] * self.ados.ck[k],
+                - he_n[k] * self.ados.ck[k],
             )
             
         else:
@@ -884,7 +884,7 @@ class HEOMSolver(Solver):
                 if prev_he is not None:
                     op = self._grad_prev(he_n, k)
                     if self.ados.exponents[k].type == BathExponent.types.Input:
-                        ops.add_op(he_n, prev_he, op, self.ados.ck[k])
+                        ops.add_op(he_n, prev_he, op, self.ados.ck[k], k)
                     else:
                         ops.add_op(he_n, prev_he, op)
            
@@ -1338,7 +1338,7 @@ class _GatherHEOMRHS:
 
         
 
-    def add_op(self, row_he, col_he, op, ck_td_factor = None):
+    def add_op(self, row_he, col_he, op, ck_td_factor = None, ado_pos = None):
         """ Add an block operator to the list. """
         if ck_td_factor == None:
             self._ops.append(
@@ -1346,7 +1346,7 @@ class _GatherHEOMRHS:
             )
         else:
             self._ops_td.append(
-            (self._f_idx(row_he), self._f_idx(col_he), op, ck_td_factor)  #try with CSR blocks for all ck
+            (self._f_idx(row_he), self._f_idx(col_he), op, ck_td_factor, ado_pos)  #try with CSR blocks for all ck
         )
         
     def gather(self):
@@ -1377,21 +1377,19 @@ class _GatherHEOMRHS:
             ops["row"], ops["col"], ops["op"],
             self._n_blocks, self._block_size,
         )
-    
+        
     def gather_td(self):
-        """ Create the time-dependent parts of the HEOM liouvillian from a 
-            sorted list of smaller sparse matrices and TD factors.
+        """ Create the HEOM liouvillian from a sorted list of smaller sparse
+            matrices.
 
             .. note::
 
                 The list of operators contains tuples of the form
-                ``(row_idx, col_idx, op, ck_td_factor)``. The row_idx and col_idx 
-                give the *block* row and column for each op. An operator with
+                ``(row_idx, col_idx, op)``. The row_idx and col_idx give the
+                *block* row and column for each op. An operator with
                 block indices ``(N, M)`` is placed at position
                 ``[N * block: (N + 1) * block, M * block: (M + 1) * block]``
-                in the output matrix, with a time-dependent factor given
-                by the function ck_td_factor.
-                
+                in the output matrix.
 
             Returns
             -------
@@ -1399,27 +1397,24 @@ class _GatherHEOMRHS:
                 A combined matrix of shape ``(block * nhe, block * ne)``.
         """
         
-        # TODO:  checks on ck_td_factor
-        self._ops_td.sort()
-      
-     
-    
-        def _sum(op, loc):
-            def _kron(x):
-                return Qobj(
-                    _data.kron(loc, x.data),
-                    dims=self._rhs_dims,
-                ).to("csr")
-            
-            return op.linear_map(_kron)
- 
-  
-        return np.sum(
-                      [_sum(QobjEvo([Qobj(op), tf_func]),
-                      _data.one_element_csr((self._n_blocks, self._n_blocks), 
-                      (row, col))) 
-                      for row, col, op, tf_func in self._ops_td]
-                      ) 
-
-
         
+        self._ops_td.sort(key=lambda x: x[4])
+
+        RHStemp  = 0
+        
+        for k, ops in groupby(self._ops_td, key=lambda x: x[4]):
+            
+            ops = np.array(list(ops), dtype=[
+                ("row", _data.base.idxint_dtype),
+                ("col", _data.base.idxint_dtype),
+                ("op", _data.CSR),
+                ("func", object),
+                ("kpos", _data.base.idxint_dtype),
+            ])
+            
+            RHStemp += QobjEvo([Qobj(_csr._from_csr_blocks(
+                                ops["row"], ops["col"], ops["op"],
+                                self._n_blocks, self._block_size,
+                                )), ops["func"][0]])
+            
+        return RHStemp
