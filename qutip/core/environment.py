@@ -1560,7 +1560,7 @@ class CFExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output_L", "Output_R"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
@@ -1700,6 +1700,7 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
         # all None: returns False
         # all provided and lengths match: returns True
         # otherwise: raises ValueError
+        
         lists = [ck_real, vk_real, ck_imag, vk_imag]
         if all(x is None for x in lists):
             return False
@@ -1719,6 +1720,9 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
         self,
         ck_real: ArrayLike = None, vk_real: ArrayLike = None,
         ck_imag: ArrayLike = None, vk_imag: ArrayLike = None,
+        ck_input: ArrayLike = None, ck_output_L: ArrayLike = None,
+        vk_output_L: ArrayLike = None, ck_output_R: ArrayLike = None, 
+        vk_output_R: ArrayLike = None,
         *,
         exponents: Sequence[CFExponent] = None,
         combine: bool = True, T: float = None, tag: Any = None
@@ -1727,6 +1731,8 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
 
         lists_provided = self._check_cks_and_vks(
             ck_real, vk_real, ck_imag, vk_imag)
+            # TODO: seperate check for input/output
+            
         if exponents is None and not lists_provided:
             raise ValueError(
                 "Either the parameter `exponents` or the parameters "
@@ -1741,11 +1747,30 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
         if lists_provided:
             exponents.extend(self._make_exponent("R", ck, vk, tag=tag)
                              for ck, vk in zip(ck_real, vk_real))
+                             
             exponents.extend(self._make_exponent("I", ck, vk, tag=tag)
                              for ck, vk in zip(ck_imag, vk_imag))
 
         if combine:
             exponents = self.combine(exponents)
+
+        if ck_input is not None:
+            exponents.extend(
+                self._make_exponent("Input", 2, Q, ck, 0., tag=tag)
+                for ck in ck_input
+            )
+
+        if ck_output_L is not None:
+            exponents.extend(
+                self._make_exponent("Output_L", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_L, vk_output_L)
+            )
+
+        if ck_output_R is not None:
+            exponents.extend(
+                self._make_exponent("Output_R", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_R, vk_output_R)
+            )
         self.exponents = exponents
 
     @classmethod

@@ -110,22 +110,8 @@ class BathExponent(environment.CFExponent):
 
     All of the parameters are also available as attributes.
     """
-
-#    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output_L", "Output_R"])
-
-#    def _check_ck2(self, type, ck2):
-#        if type == self.types["RI"]:
-#            if ck2 is None:
-#                raise ValueError("RI bath exponents require ck2")
-#        else:
-#            if ck2 is not None:
-#                raise ValueError(
-#                    "Second co-efficient (ck2) should only be specified for RI"
-#                    " bath exponents"
-#                )
-#=======
+    
     types = environment.CFExponent.types
-#>>>>>>> upstream/master
 
     def _check_sigma_bar_k_offset(self, type, offset):
         if type in (self.types["+"], self.types["-"]):
@@ -313,8 +299,8 @@ class BosonicBath(environment.ExponentialBosonicEnvironment):
    #     super().__init__(exponents)
 #=======
         super().__init__(ck_real, vk_real, ck_imag, vk_imag,
-                         ck_input=None, ck_output_L=None, vk_output_L=None,
-                         ck_output_R=None, vk_output_R=None,
+                         ck_input, ck_output_L, vk_output_L,
+                         ck_output_R, vk_output_R,
                          combine=combine, tag=tag)
 #>>>>>>> upstream/master
 

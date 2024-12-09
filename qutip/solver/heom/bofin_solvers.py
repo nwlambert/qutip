@@ -1399,7 +1399,7 @@ class _GatherHEOMRHS:
     def __init__(self, f_idx, block, nhe, rhs_dims):
 #=======
 
-    def __init__(self, f_idx, block, nhe, rhs_dims):
+    #def __init__(self, f_idx, block, nhe, rhs_dims):
 #>>>>>>> upstream/master
         self._block_size = block
         self._n_blocks = nhe
