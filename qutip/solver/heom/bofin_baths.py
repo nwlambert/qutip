@@ -241,8 +241,8 @@ class BosonicBath(environment.ExponentialBosonicEnvironment):
     which is not included in the newer "environment" API.
     """
 
-    def _make_exponent(self, type, ck, vk, ck2=None, tag=None):
-        return BathExponent(type, None, self._Q, ck, vk, ck2, tag=tag)
+    def _make_exponent(self, type, ck, vk, ck2=None, tag=None, dim = None):
+        return BathExponent(type, dim, self._Q, ck, vk, ck2, tag=tag)
 
     def _check_coup_op(self, Q):
         if not isinstance(Q, Qobj):

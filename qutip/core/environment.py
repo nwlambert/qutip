@@ -1756,19 +1756,19 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
 
         if ck_input is not None:
             exponents.extend(
-                self._make_exponent("Input", 2, Q, ck, 0., tag=tag)
+                self._make_exponent("Input", ck, 0., tag=tag, dim=2)
                 for ck in ck_input
             )
 
         if ck_output_L is not None:
             exponents.extend(
-                self._make_exponent("Output_L", 2, Q, ck, vk, tag=tag)
+                self._make_exponent("Output_L", ck, vk, tag=tag, dim=2)
                 for ck, vk in zip(ck_output_L, vk_output_L)
             )
 
         if ck_output_R is not None:
             exponents.extend(
-                self._make_exponent("Output_R", 2, Q, ck, vk, tag=tag)
+                self._make_exponent("Output_R", ck, vk, tag=tag, dim=2)
                 for ck, vk in zip(ck_output_R, vk_output_R)
             )
         self.exponents = exponents
