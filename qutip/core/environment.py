@@ -1720,9 +1720,6 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
         self,
         ck_real: ArrayLike = None, vk_real: ArrayLike = None,
         ck_imag: ArrayLike = None, vk_imag: ArrayLike = None,
-        ck_input: ArrayLike = None, ck_output_L: ArrayLike = None,
-        vk_output_L: ArrayLike = None, ck_output_R: ArrayLike = None, 
-        vk_output_R: ArrayLike = None,
         *,
         exponents: Sequence[CFExponent] = None,
         combine: bool = True, T: float = None, tag: Any = None
@@ -1744,6 +1741,7 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
             )
 
         exponents = exponents or []
+        
         if lists_provided:
             exponents.extend(self._make_exponent("R", ck, vk, tag=tag)
                              for ck, vk in zip(ck_real, vk_real))
@@ -1754,23 +1752,7 @@ class ExponentialBosonicEnvironment(BosonicEnvironment):
         if combine:
             exponents = self.combine(exponents)
 
-        if ck_input is not None:
-            exponents.extend(
-                self._make_exponent("Input", ck, 0., tag=tag, dim=2)
-                for ck in ck_input
-            )
-
-        if ck_output_L is not None:
-            exponents.extend(
-                self._make_exponent("Output_L", ck, vk, tag=tag, dim=2)
-                for ck, vk in zip(ck_output_L, vk_output_L)
-            )
-
-        if ck_output_R is not None:
-            exponents.extend(
-                self._make_exponent("Output_R", ck, vk, tag=tag, dim=2)
-                for ck, vk in zip(ck_output_R, vk_output_R)
-            )
+       
         self.exponents = exponents
 
     @classmethod

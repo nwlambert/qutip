@@ -28,6 +28,7 @@ __all__ = [
     "BathExponent",
     "Bath",
     "BosonicBath",
+    "InputOutputBath",
     "DrudeLorentzBath",
     "DrudeLorentzPadeBath",
     "UnderDampedBath",
@@ -250,59 +251,16 @@ class BosonicBath(environment.ExponentialBosonicEnvironment):
 
     def __init__(
             self, Q, ck_real, vk_real, ck_imag, vk_imag, 
-            ck_input=None, ck_output_L=None, vk_output_L=None,
-            ck_output_R=None, vk_output_R=None, combine=True,
-            tag=None,
-    ):
-  #      self._check_cks_and_vks(ck_real, vk_real, ck_imag, vk_imag)  #TODO: add input/output checks
+            combine=True, tag=None,
+        ):
 
-#        self, Q, ck_real, vk_real, ck_imag, vk_imag, combine=True, tag=None
-#    ):
-#>>>>>>> upstream/master
         self._check_coup_op(Q)
         self._Q = Q
 
-#<<<<<<< HEAD
-#        exponents = []
-#        exponents.extend(
-#            BathExponent("R", None, Q, ck, vk, tag=tag)
-#            for ck, vk in zip(ck_real, vk_real)
-#        )
-#        exponents.extend(
-#            BathExponent("I", None, Q, ck, vk, tag=tag)
-#            for ck, vk in zip(ck_imag, vk_imag)
-#        )
-        
 
-#        if combine:
-            #exponents = self.combine(exponents)
-        
-        #if ck_input is not None:
-         #   exponents.extend(
-          #      BathExponent("Input", 2, Q, ck, 0., tag=tag)
-          #      for ck in ck_input
-          #  )
-
-        #if ck_output_L is not None:
-            #exponents.extend(
-                #BathExponent("Output_L", 2, Q, ck, vk, tag=tag)
-                #for ck, vk in zip(ck_output_L, vk_output_L)
-            #)
-
-        #if ck_output_R is not None:
-            #exponents.extend(
-                #BathExponent("Output_R", 2, Q, ck, vk, tag=tag)
-                #for ck, vk in zip(ck_output_R, vk_output_R)
-            #)
-
-
-   #     super().__init__(exponents)
-#=======
-        super().__init__(ck_real, vk_real, ck_imag, vk_imag,
-                         ck_input, ck_output_L, vk_output_L,
-                         ck_output_R, vk_output_R,
+        super().__init__(ck_real, vk_real, ck_imag, vk_imag,                         
                          combine=combine, tag=tag)
-#>>>>>>> upstream/master
+
 
     @classmethod
     def from_environment(cls, env, Q, dim=None):
@@ -332,6 +290,105 @@ class BosonicBath(environment.ExponentialBosonicEnvironment):
         result = cls(Q, [], [], [], [], tag=env.tag)
         result.exponents = bath_exponents
         return result
+        
+class InputOutputBath(environment.ExponentialBosonicEnvironment):
+    """
+    A helper class for constructing an specialized 'input output' bath,
+    that enables one to customize the HEOM to support input operations on a bath,
+    and gain access to output observables.  Must be used alongside another 
+    bosonic bath.
+
+    Parameters
+    ----------
+    Q : Qobj
+        The coupling operator for the bath.
+
+    ck_input : list of functions
+        Functions defining the time-dependence of the input fields that are chosen
+        to act on the bath at t=0. The time dependence here defines how those
+        fields are correlated with the actual bath the system is interacting with.
+        For example, if the fields are defined as b_in^L \rho(t=0) b_in^R, then
+        the first function in this list is: <X(t)b_in(0)^R> while the second is
+        <X(t)b_in(0)^L>,  where X is the bath coupling operator to the system defined for 
+        the bath being prepared.
+
+    ck_output_L : list of complex
+        The coefficients of the expansion terms for the correlation function 
+        defining the correlation between a desired output observables
+        'b_out' and the bath coupling operator at t=0 acting the left of the 
+        bath state. I.e., <b_out(t) X(0)^L>
+        
+
+    vk_output_L : list of complex
+        The frequencies of the expansion terms for the correlation function 
+        defining the correlation between a desired output observables
+        'b_out' and the bath coupling operator at t=0 acting the left of the 
+        bath state. I.e., <b_out(t) X(0)^L>
+
+    ck_output_R: list of complex
+        The coefficients of the expansion terms for the correlation function 
+        defining the correlation between a desired output observables
+        'b_out' and the bath coupling operator at t=0 acting the right of the 
+        bath state. I.e., <b_out(t) X(0)^R>
+        
+    vk_output_R: list of complex
+        The frequencies of the expansion terms for the correlation function 
+        defining the correlation between a desired output observables
+        'b_out' and the bath coupling operator at t=0 acting the right of the 
+        bath state. I.e., <b_out(t) X(0)^R>
+
+    tag : optional, str, tuple or any other object
+        A label for the bath exponents (for example, the name of the
+        bath). It defaults to None but can be set to help identify which
+        bath an exponent is from.
+
+    Notes
+    -----
+    This class is part of the "bath" API, which is now mirrored by the newer
+    "environment" API. The bath classes are kept in QuTiP for reasons of
+    backwards compatibility and convenience. This class is an extended version
+    of the :class:`.ExponentialBosonicEnvironment`, but avoids a lot of the 
+    checks normally used for a 'real' environment, as this is a custom one unique
+    to the input-output HEOM formalism.
+    """
+
+    def _check_coup_op(self, Q):
+        if not isinstance(Q, Qobj):
+            raise ValueError("The coupling operator Q must be a Qobj.")
+
+    def __init__(
+            self, Q, ck_input=None, ck_output_L=None, vk_output_L=None,
+            ck_output_R=None, vk_output_R=None, tag=None,
+    ):
+  
+        self._check_coup_op(Q)
+        self._Q = Q
+
+
+        exponents = []
+
+        
+        if ck_input is not None:
+            exponents.extend(
+                BathExponent("Input", 2, Q, ck, 0., tag=tag)
+                for ck in ck_input
+            )
+
+        if ck_output_L is not None:
+            exponents.extend(
+                BathExponent("Output_L", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_L, vk_output_L)
+            )
+
+        if ck_output_R is not None:
+            exponents.extend(
+                BathExponent("Output_R", 2, Q, ck, vk, tag=tag)
+                for ck, vk in zip(ck_output_R, vk_output_R)
+            )
+
+
+        self.exponents = exponents
+
 
 
 class DrudeLorentzBath(BosonicBath):

@@ -26,7 +26,8 @@ from qutip.core.environment import (
 from qutip.core import Qobj, QobjEvo
 from qutip.core.superoperator import liouvillian, spre, spost
 from .bofin_baths import (
-    Bath, BathExponent, BosonicBath, DrudeLorentzBath, FermionicBath,
+    Bath, BathExponent, BosonicBath, InputOutputBath, DrudeLorentzBath, 
+    FermionicBath,
 )
 from ..solver_base import Solver
 from .. import Result
@@ -763,7 +764,7 @@ class HEOMSolver(Solver):
         return True
 
     def _to_bath(self, bath_spec):
-        if isinstance(bath_spec, (Bath, BosonicBath, FermionicBath)):
+        if isinstance(bath_spec, (Bath, BosonicBath, FermionicBath, InputOutputBath)):
             return bath_spec
 
         if not self._is_environment_api(bath_spec):
