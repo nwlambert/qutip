@@ -377,13 +377,13 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
         if ck_output_fn_L is not None:
             exponents.extend(
                 BathExponent("Output_fn_L", 2, Q, ck, 0., tag=tag)
-                for ck in ck_input
+                for ck in ck_output_fn_L
             )
         
         if ck_output_fn_R is not None:
             exponents.extend(
                 BathExponent("Output_fn_R", 2, Q, ck, 0., tag=tag)
-                for ck in ck_input
+                for ck in ck_output_fn_R
             )
 
         if ck_output_L is not None:
