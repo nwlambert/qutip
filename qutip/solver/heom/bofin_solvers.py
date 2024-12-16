@@ -830,6 +830,19 @@ class HEOMSolver(Solver):
                 he_n[k],
             )  #omit ck here, it is included in ops_td
 
+        elif self.ados.exponents[k].type == BathExponent.types.Output_fn_L:
+            op = _data.mul(
+                self._spreQ[k],
+                he_n[k],
+            )  #omit ck here, it is included in ops_td
+
+        elif self.ados.exponents[k].type == BathExponent.types.Output_fn_R:
+            op = _data.mul(
+                self._spostQ[k],
+                he_n[k],
+            )  #omit ck here, it is included in ops_td
+
+
         elif self.ados.exponents[k].type == BathExponent.types.Output_L:
             op = _data.mul(
                 self._spreQ[k],
@@ -896,6 +909,8 @@ class HEOMSolver(Solver):
 
     def _grad_next_bosonic(self, he_n, k):
         if (self.ados.exponents[k].type != BathExponent.types.Input and
+        self.ados.exponents[k].type != BathExponent.types.Output_fn_L and
+        self.ados.exponents[k].type != BathExponent.types.Output_fn_R and
             self.ados.exponents[k].type != BathExponent.types.Output_L and
             self.ados.exponents[k].type != BathExponent.types.Output_R):
             op = _data.mul(self._s_pre_minus_post_Q[k], -1j) #op = (self._s_pre_minus_post_Q[k]* -1j)
@@ -952,7 +967,9 @@ class HEOMSolver(Solver):
                 prev_he = self.ados.prev(he_n, k)
                 if prev_he is not None:
                     op = self._grad_prev(he_n, k)
-                    if self.ados.exponents[k].type == BathExponent.types.Input:
+                    if self.ados.exponents[k].type in (BathExponent.types.Input,
+                                                       BathExponent.types.Output_fn_L,
+                                                       BathExponent.types.Output_fn_L):                        
                         ops.add_op(he_n, prev_he, op, self.ados.ck[k], k)
                     else:
                         ops.add_op(he_n, prev_he, op)

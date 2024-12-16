@@ -357,7 +357,7 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
             raise ValueError("The coupling operator Q must be a Qobj.")
 
     def __init__(
-            self, Q, ck_input=None, ck_output_L=None, vk_output_L=None,
+            self, Q, ck_input=None, ck_output_fn_L=None, ck_output_fn_R=None, ck_output_L=None, vk_output_L=None,
             ck_output_R=None, vk_output_R=None, tag=None,
     ):
   
@@ -371,6 +371,18 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
         if ck_input is not None:
             exponents.extend(
                 BathExponent("Input", 2, Q, ck, 0., tag=tag)
+                for ck in ck_input
+            )
+        
+        if ck_output_fn_L is not None:
+            exponents.extend(
+                BathExponent("Output_fn_L", 2, Q, ck, 0., tag=tag)
+                for ck in ck_input
+            )
+        
+        if ck_output_fn_R is not None:
+            exponents.extend(
+                BathExponent("Output_fn_R", 2, Q, ck, 0., tag=tag)
                 for ck in ck_input
             )
 

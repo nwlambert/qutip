@@ -1560,7 +1560,7 @@ class CFExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output_L", "Output_R"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output", "Output_fn_L", "Output_fn_R", "Output_L", "Output_R"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
