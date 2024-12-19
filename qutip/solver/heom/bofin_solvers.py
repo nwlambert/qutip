@@ -909,8 +909,8 @@ class HEOMSolver(Solver):
 
     def _grad_next_bosonic(self, he_n, k):
         if (self.ados.exponents[k].type != BathExponent.types.Input and
-        self.ados.exponents[k].type != BathExponent.types.Output_fn_L and
-        self.ados.exponents[k].type != BathExponent.types.Output_fn_R and
+            self.ados.exponents[k].type != BathExponent.types.Output_fn_L and
+            self.ados.exponents[k].type != BathExponent.types.Output_fn_R and
             self.ados.exponents[k].type != BathExponent.types.Output_L and
             self.ados.exponents[k].type != BathExponent.types.Output_R):
             op = _data.mul(self._s_pre_minus_post_Q[k], -1j) #op = (self._s_pre_minus_post_Q[k]* -1j)
@@ -969,7 +969,7 @@ class HEOMSolver(Solver):
                     op = self._grad_prev(he_n, k)
                     if self.ados.exponents[k].type in (BathExponent.types.Input,
                                                        BathExponent.types.Output_fn_L,
-                                                       BathExponent.types.Output_fn_L):                        
+                                                       BathExponent.types.Output_fn_R):                        
                         ops.add_op(he_n, prev_he, op, self.ados.ck[k], k)
                     else:
                         ops.add_op(he_n, prev_he, op)
@@ -1413,12 +1413,10 @@ class _GatherHEOMRHS:
         nhe : int
             The number of ADOs in the hierarchy.
     """
-#<<<<<<< HEAD
-    def __init__(self, f_idx, block, nhe, rhs_dims):
-#=======
 
-    #def __init__(self, f_idx, block, nhe, rhs_dims):
-#>>>>>>> upstream/master
+    def __init__(self, f_idx, block, nhe, rhs_dims):
+
+
         self._block_size = block
         self._n_blocks = nhe
         self._f_idx = f_idx
