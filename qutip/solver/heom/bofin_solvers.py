@@ -764,7 +764,8 @@ class HEOMSolver(Solver):
         return True
 
     def _to_bath(self, bath_spec):
-        if isinstance(bath_spec, (Bath, BosonicBath, FermionicBath, InputOutputBath)):
+        if isinstance(bath_spec, (Bath, BosonicBath, 
+                                  FermionicBath, InputOutputBath)):
             return bath_spec
 
         if not self._is_environment_api(bath_spec):
@@ -823,38 +824,37 @@ class HEOMSolver(Solver):
             )
 
             op = _data.add(term1, term2)
-        
+
         elif self.ados.exponents[k].type == BathExponent.types.Input:
             op = _data.mul(
                 self._s_pre_minus_post_Q[k],
                 he_n[k],
-            )  #omit ck here, it is included in ops_td
+            )  # omit ck here, it is included in ops_td
 
         elif self.ados.exponents[k].type == BathExponent.types.Output_fn_L:
             op = _data.mul(
                 self._spreQ[k],
                 he_n[k],
-            )  #omit ck here, it is included in ops_td
+            )  # omit ck here, it is included in ops_td
 
         elif self.ados.exponents[k].type == BathExponent.types.Output_fn_R:
             op = _data.mul(
                 self._spostQ[k],
                 he_n[k],
-            )  #omit ck here, it is included in ops_td
-
+            )  # omit ck here, it is included in ops_td
 
         elif self.ados.exponents[k].type == BathExponent.types.Output_L:
             op = _data.mul(
                 self._spreQ[k],
                 he_n[k] * self.ados.ck[k],
             )
-            
+    
         elif self.ados.exponents[k].type == BathExponent.types.Output_R:
             op = _data.mul(
                 self._spostQ[k],
                 - he_n[k] * self.ados.ck[k],
             )
-            
+  
         else:
             raise ValueError(
                 f"Unsupported type {self.ados.exponents[k].type}"
@@ -909,11 +909,11 @@ class HEOMSolver(Solver):
 
     def _grad_next_bosonic(self, he_n, k):
         if (self.ados.exponents[k].type != BathExponent.types.Input and
-            self.ados.exponents[k].type != BathExponent.types.Output_fn_L and
-            self.ados.exponents[k].type != BathExponent.types.Output_fn_R and
-            self.ados.exponents[k].type != BathExponent.types.Output_L and
-            self.ados.exponents[k].type != BathExponent.types.Output_R):
-            op = _data.mul(self._s_pre_minus_post_Q[k], -1j) #op = (self._s_pre_minus_post_Q[k]* -1j)
+                self.ados.exponents[k].type != BathExponent.types.Output_fn_L and
+                self.ados.exponents[k].type != BathExponent.types.Output_fn_R and
+                self.ados.exponents[k].type != BathExponent.types.Output_L and
+                self.ados.exponents[k].type != BathExponent.types.Output_R):
+            op = _data.mul(self._s_pre_minus_post_Q[k], -1j) 
             return op
         else: 
             return None
@@ -952,7 +952,8 @@ class HEOMSolver(Solver):
             [self._sup_shape * self._n_ados], [self._sup_shape * self._n_ados]
         ]
         ops = _GatherHEOMRHS(
-            self.ados.idx, block=self._sup_shape, nhe=self._n_ados, rhs_dims=rhs_dims
+            self.ados.idx, block=self._sup_shape, 
+            nhe=self._n_ados, rhs_dims=rhs_dims
         )
 
         for he_n in self.ados.labels:
@@ -967,9 +968,11 @@ class HEOMSolver(Solver):
                 prev_he = self.ados.prev(he_n, k)
                 if prev_he is not None:
                     op = self._grad_prev(he_n, k)
-                    if self.ados.exponents[k].type in (BathExponent.types.Input,
-                                                       BathExponent.types.Output_fn_L,
-                                                       BathExponent.types.Output_fn_R):                        
+                    if self.ados.exponents[k].type in (
+                            BathExponent.types.Input,
+                            BathExponent.types.Output_fn_L,
+                            BathExponent.types.Output_fn_R
+                            ):
                         ops.add_op(he_n, prev_he, op, self.ados.ck[k], k)
                     else:
                         ops.add_op(he_n, prev_he, op)
@@ -1416,7 +1419,6 @@ class _GatherHEOMRHS:
 
     def __init__(self, f_idx, block, nhe, rhs_dims):
 
-
         self._block_size = block
         self._n_blocks = nhe
         self._f_idx = f_idx
@@ -1424,19 +1426,20 @@ class _GatherHEOMRHS:
         self._ops_td = []
         self._rhs_dims = rhs_dims
 
-        
-
-    def add_op(self, row_he, col_he, op, ck_td_factor = None, ado_pos = None):
+    def add_op(self, row_he, col_he, op, ck_td_factor=None, ado_pos=None):
         """ Add an block operator to the list. """
-        if ck_td_factor == None:
+        if ck_td_factor is None:
             self._ops.append(
                 (self._f_idx(row_he), self._f_idx(col_he), op)
             )
         else:
             self._ops_td.append(
-            (self._f_idx(row_he), self._f_idx(col_he), op, ck_td_factor, ado_pos)  #try with CSR blocks for all ck
-        )
-        
+                (self._f_idx(row_he),
+                 self._f_idx(col_he),
+                 op, ck_td_factor,
+                 ado_pos)
+                )
+
     def gather(self):
         """ Create the HEOM liouvillian from a sorted list of smaller sparse
             matrices.
@@ -1465,7 +1468,7 @@ class _GatherHEOMRHS:
             ops["row"], ops["col"], ops["op"],
             self._n_blocks, self._block_size,
         )
-        
+
     def gather_td(self):
         """ Create the HEOM liouvillian from a sorted list of smaller sparse
             matrices.
@@ -1484,14 +1487,11 @@ class _GatherHEOMRHS:
             rhs : :obj:`Data`
                 A combined matrix of shape ``(block * nhe, block * ne)``.
         """
-        
-        
-        self._ops_td.sort(key=lambda x: x[4])
 
-        RHStemp  = 0
-        
+        self._ops_td.sort(key=lambda x: x[4])
+        RHStemp = 0
+
         for k, ops in groupby(self._ops_td, key=lambda x: x[4]):
-            
             ops = np.array(list(ops), dtype=[
                 ("row", _data.base.idxint_dtype),
                 ("col", _data.base.idxint_dtype),
@@ -1499,10 +1499,10 @@ class _GatherHEOMRHS:
                 ("func", object),
                 ("kpos", _data.base.idxint_dtype),
             ])
-            
+
             RHStemp += QobjEvo([Qobj(_csr._from_csr_blocks(
                                 ops["row"], ops["col"], ops["op"],
                                 self._n_blocks, self._block_size,
                                 )), ops["func"][0]])
-            
+
         return RHStemp
