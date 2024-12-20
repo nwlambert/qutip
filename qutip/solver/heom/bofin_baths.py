@@ -290,13 +290,14 @@ class BosonicBath(environment.ExponentialBosonicEnvironment):
         result = cls(Q, [], [], [], [], tag=env.tag)
         result.exponents = bath_exponents
         return result
-        
+
+
 class InputOutputBath(environment.ExponentialBosonicEnvironment):
     """
     A helper class for constructing an specialized 'input output' bath,
-    that enables one to customize the HEOM to support input operations on a bath,
-    and gain access to output observables.  Must be used alongside another 
-    bosonic bath.
+    that enables one to customize the HEOM to support input operations on a
+    bath, and gain access to output observables. Typically used alongside
+    another bosonic bath, but can also be used in Markov limit.
 
     Parameters
     ----------
@@ -304,37 +305,57 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
         The coupling operator for the bath.
 
     ck_input : list of functions
-        Functions defining the time-dependence of the input fields that are chosen
-        to act on the bath at t=0. The time dependence here defines how those
-        fields are correlated with the actual bath the system is interacting with.
+        Functions defining the time-dependence of the input fields that are
+        chosen to act on the bath at t=0. The time dependence here defines how
+        those fields are correlated with the actual bath the system is
+        interacting with.
+
         For example, if the fields are defined as b_in^L \rho(t=0) b_in^R, then
         the first function in this list is: <X(t)b_in(0)^R> while the second is
-        <X(t)b_in(0)^L>,  where X is the bath coupling operator to the system defined for 
-        the bath being prepared.
+        <X(t)b_in(0)^L>,  where X is the bath coupling operator to the system
+        defined for  the bath being prepared.
 
-    ck_output_L : list of complex
-        The coefficients of the expansion terms for the correlation function 
-        defining the correlation between a desired output observables
-        'b_out' and the bath coupling operator at t=0 acting the left of the 
-        bath state. I.e., <b_out(t) X(0)^L>
-        
+    ck_output_fn_L : list of functions
+        Functions defining the time-dependence of the output fields that are
+        chosen to act on the bath at t_out. The time dependence here defines
+        how those fields are correlated with the actual bath the system is
+        interacting with.
+
+        For example, if the fields are defined as b_out^L \rho(t_out) b_in^R,
+        then this is list of functions <X(t)^{L}b_out(t_out)^L> and 
+        <X(t)^{L}b_out(t_out)^R> where X is the bath coupling operator to the
+        system defined for the bath being prepared.
+
+    ck_output_fn_R : list of complex
+        Functions defining the time-dependence of the output fields that are
+        chosen to act on the bath at t_out. The time dependence here defines
+        how those fields are correlated with the actual bath the system is
+        interacting with.
+
+        For example, if the fields are defined as b_out^L \rho(t_out) b_in^R,
+        then this is list of functions <X(t)^{R}b_out(t_out)^L> and 
+        <X(t)^{R}b_out(t_out)^R> where X is the bath coupling operator to the
+        system defined for  the bath being prepared.
 
     vk_output_L : list of complex
-        The frequencies of the expansion terms for the correlation function 
+        Alternative definition of output.
+        The frequencies of the expansion terms for the correlation function
         defining the correlation between a desired output observables
-        'b_out' and the bath coupling operator at t=0 acting the left of the 
+        'b_out' and the bath coupling operator at t=0 acting the left of the
         bath state. I.e., <b_out(t) X(0)^L>
 
     ck_output_R: list of complex
-        The coefficients of the expansion terms for the correlation function 
+        Alternative definition of output.
+        The coefficients of the expansion terms for the correlation function
         defining the correlation between a desired output observables
-        'b_out' and the bath coupling operator at t=0 acting the right of the 
+        'b_out' and the bath coupling operator at t=0 acting the right of the
         bath state. I.e., <b_out(t) X(0)^R>
-        
+
     vk_output_R: list of complex
-        The frequencies of the expansion terms for the correlation function 
+        Alternative definition of output.
+        The frequencies of the expansion terms for the correlation function
         defining the correlation between a desired output observables
-        'b_out' and the bath coupling operator at t=0 acting the right of the 
+        'b_out' and the bath coupling operator at t=0 acting the right of the
         bath state. I.e., <b_out(t) X(0)^R>
 
     tag : optional, str, tuple or any other object
@@ -347,9 +368,9 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
     This class is part of the "bath" API, which is now mirrored by the newer
     "environment" API. The bath classes are kept in QuTiP for reasons of
     backwards compatibility and convenience. This class is an extended version
-    of the :class:`.ExponentialBosonicEnvironment`, but avoids a lot of the 
-    checks normally used for a 'real' environment, as this is a custom one unique
-    to the input-output HEOM formalism.
+    of the :class:`.ExponentialBosonicEnvironment`, but avoids a lot of the
+    checks normally used for a 'real' environment, as this is a custom one 
+    unique to the input-output HEOM formalism.
     """
 
     def _check_coup_op(self, Q):
@@ -357,29 +378,28 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
             raise ValueError("The coupling operator Q must be a Qobj.")
 
     def __init__(
-            self, Q, ck_input=None, ck_output_fn_L=None, ck_output_fn_R=None, ck_output_L=None, vk_output_L=None,
+            self, Q, ck_input=None, ck_output_fn_L=None, ck_output_fn_R=None,
+            ck_output_L=None, vk_output_L=None,
             ck_output_R=None, vk_output_R=None, tag=None,
     ):
-  
+
         self._check_coup_op(Q)
         self._Q = Q
 
-
         exponents = []
-
-        
+ 
         if ck_input is not None:
             exponents.extend(
                 BathExponent("Input", 2, Q, ck, 0., tag=tag)
                 for ck in ck_input
             )
-        
+
         if ck_output_fn_L is not None:
             exponents.extend(
                 BathExponent("Output_fn_L", 2, Q, ck, 0., tag=tag)
                 for ck in ck_output_fn_L
             )
-        
+
         if ck_output_fn_R is not None:
             exponents.extend(
                 BathExponent("Output_fn_R", 2, Q, ck, 0., tag=tag)
@@ -398,11 +418,9 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
                 for ck, vk in zip(ck_output_R, vk_output_R)
             )
 
-
         self.exponents = exponents
 
-
-
+        
 class DrudeLorentzBath(BosonicBath):
     """
     A helper class for constructing a Drude-Lorentz bosonic bath from the
