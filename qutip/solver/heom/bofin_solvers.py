@@ -990,18 +990,25 @@ class HEOMSolver(Solver):
         if self.L_sys.isconstant:
             # For the constant case, we just add the Liouvillian to the
             # diagonal blocks of the RHS matrix.
+            # Note: Any time-dependent terms from input/output exponents
+            # are included in rhs_mat_t
             rhs_mat += _data.kron(h_identity, self.L_sys(0).to("csr").data)
-            rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims))+ rhs_mat_td
+            rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims)) + rhs_mat_td
         else:
-            # In the time dependent case, we construct the parameters
+            # In the 'system' time dependent case, we construct the parameters
             # for the ODE gradient function under the assumption that
             #
-            # RHSmat(t) = RHSmat + time dependent terms that only affect the
-            # diagonal blocks of the RHS matrix.
+            # RHSmat(t) = RHSmat + rhs_mat_td from input/output terms 
+            # + time dependent terms that only affect the
+            # diagonal blocks of the RHS matrix 
             #
             # This assumption holds because only _grad_n dependents on
             # the system Liouvillian (and not _grad_prev or _grad_next) and
-            # the bath coupling operators are not time-dependent.
+            # most bath coupling operators are not time-dependent.
+
+            #Assuming full time-dependence for all bath coupling operators is
+            #very costly for large problems, so we avoid that for the moment.
+
             rhs = QobjEvo(Qobj(rhs_mat, dims=rhs_dims)) + rhs_mat_td
 
             def _kron(x):
@@ -1471,7 +1478,8 @@ class _GatherHEOMRHS:
 
     def gather_td(self):
         """ Create the HEOM liouvillian from a sorted list of smaller sparse
-            matrices.
+            matrices with time-dependent coeffecients. Used by input and output
+            exponents.
 
             .. note::
 
@@ -1484,12 +1492,16 @@ class _GatherHEOMRHS:
 
             Returns
             -------
-            rhs : :obj:`Data`
-                A combined matrix of shape ``(block * nhe, block * ne)``.
+            rhs : :obj:`QobjEvo`
+                A combined QobjEvo of shape ``(block * nhe, block * ne)``
+                containing time-dependent input/output couplings.
         """
 
         self._ops_td.sort(key=lambda x: x[4])
         RHStemp = 0
+        #we group terms by 'exponent'/TD funct given by 'kpos' 
+        #and add them together. Most efficient construction 
+        #we could find for the moment.
 
         for k, ops in groupby(self._ops_td, key=lambda x: x[4]):
             ops = np.array(list(ops), dtype=[
