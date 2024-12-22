@@ -840,7 +840,7 @@ class HEOMSolver(Solver):
         elif self.ados.exponents[k].type == BathExponent.types.Output_fn_R:
             op = _data.mul(
                 self._spostQ[k],
-                he_n[k],
+                - he_n[k],
             )  # omit ck here, it is included in ops_td
 
         elif self.ados.exponents[k].type == BathExponent.types.Output_L:
