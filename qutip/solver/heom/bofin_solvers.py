@@ -801,7 +801,7 @@ class HEOMSolver(Solver):
 
     def _grad_prev_bosonic(self, he_n, k):
         if self.ados.exponents[k].type == BathExponent.types.R:
-             op = _data.mul(
+            op = _data.mul(
                 self._s_pre_minus_post_Q[k],
                 -1j * he_n[k] * self.ados.ck[k],
             )
@@ -952,7 +952,7 @@ class HEOMSolver(Solver):
             [self._sup_shape * self._n_ados], [self._sup_shape * self._n_ados]
         ]
         ops = _GatherHEOMRHS(
-            self.ados.idx, block=self._sup_shape, 
+            self.ados.idx, block=self._sup_shape,
             nhe=self._n_ados, rhs_dims=rhs_dims
         )
 
@@ -1499,9 +1499,9 @@ class _GatherHEOMRHS:
 
         self._ops_td.sort(key=lambda x: x[4])
         RHStemp = 0
-        #we group terms by 'exponent'/TD funct given by 'kpos' 
-        #and add them together. Most efficient construction 
-        #we could find for the moment.
+        # We group terms by 'exponent'/TD funct given by 'kpos'
+        # and add them together. Most efficient construction
+        # we could find for the moment.
 
         for k, ops in groupby(self._ops_td, key=lambda x: x[4]):
             ops = np.array(list(ops), dtype=[
@@ -1515,6 +1515,7 @@ class _GatherHEOMRHS:
             RHStemp += QobjEvo([Qobj(_csr._from_csr_blocks(
                                 ops["row"], ops["col"], ops["op"],
                                 self._n_blocks, self._block_size,
-                                )), ops["func"][0]])
+                                ), dims=self._rhs_dims),
+                                ops["func"][0]])
 
         return RHStemp

@@ -1530,6 +1530,10 @@ class CFExponent:
 
         "+" and "-" are fermionic exponents.
 
+        "Input", "Output_fn_L", "Output_fn_R", "Output_L", "Output_R" are
+        special types used with InputOutputBaths from bofin_baths, and
+        are not used with other solvers.
+
     ck : complex
         The coefficient of the excitation term.
 
@@ -1560,7 +1564,9 @@ class CFExponent:
 
     All of the parameters are also available as attributes.
     """
-    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input", "Output", "Output_fn_L", "Output_fn_R", "Output_L", "Output_R"])
+    types = enum.Enum("ExponentType", ["R", "I", "RI", "+", "-", "Input",
+                                       "Output_fn_L", "Output_fn_R",
+                                       "Output_L", "Output_R"])
 
     def _check_ck2(self, type, ck2):
         if type == self.types["RI"]:
