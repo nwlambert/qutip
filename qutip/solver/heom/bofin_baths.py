@@ -337,6 +337,13 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
         <X(t)^{R}b_out(t_out)^R> where X is the bath coupling operator to the
         system defined for  the bath being prepared.
 
+    ck_output_L: list of complex
+        Alternative definition of output.
+        The coefficients of the expansion terms for the correlation function
+        defining the correlation between a desired output observables
+        'b_out' and the bath coupling operator at t=0 acting the right of the
+        bath state. I.e., <b_out(t) X(0)^L>
+
     vk_output_L : list of complex
         Alternative definition of output.
         The frequencies of the expansion terms for the correlation function
@@ -365,11 +372,9 @@ class InputOutputBath(environment.ExponentialBosonicEnvironment):
 
     Notes
     -----
-    This class is part of the "bath" API, which is now mirrored by the newer
-    "environment" API. The bath classes are kept in QuTiP for reasons of
-    backwards compatibility and convenience. This class is an extended version
+    This class is part of the "bath" API. This class is an extended version
     of the :class:`.ExponentialBosonicEnvironment`, but avoids a lot of the
-    checks normally used for a 'real' environment, as this is a custom one 
+    checks normally used for a 'real' environment, as this is a custom one
     unique to the input-output HEOM formalism.
     """
 
