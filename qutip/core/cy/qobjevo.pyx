@@ -2,7 +2,6 @@
 #cython: boundscheck=False, wraparound=False, initializedcheck=False, cdvision=True
 
 import numpy as np
-
 import numbers
 import itertools
 from functools import partial
@@ -10,7 +9,6 @@ from functools import partial
 import qutip
 from .. import Qobj
 from .. import data as _data
-
 from ..dimensions import Dimensions
 from ..coefficient import coefficient, CompilationOptions
 from ._element import *
@@ -22,8 +20,8 @@ from qutip.core.data.expect cimport *
 from qutip.core.data.reshape cimport (column_stack_dense, column_unstack_dense)
 from qutip.core.cy.coefficient cimport Coefficient
 from libc.math cimport fabs
-__all__ = ['QobjEvo']
 
+__all__ = ['QobjEvo']
 
 cdef class QobjEvo:
     """
@@ -804,9 +802,7 @@ cdef class QobjEvo:
             if res(0) != out:
                 raise ValueError("The mapping is not linear")
 
-        return res           
-        
-
+        return res
 
     ###########################################################################
     # Cleaning and compress                                                   #
@@ -1105,7 +1101,7 @@ cdef class QobjEvo:
                     dims=[self._dims[0], state._dims[1]],
                     copy=False
                     )
-    
+
     cpdef Data matmul_data(QobjEvo self, object t, Data state, Data out=None):
         """Compute ``out += self(t) @ state``"""
         cdef _BaseElement part
@@ -1120,8 +1116,6 @@ cdef class QobjEvo:
             part = (<_BaseElement> element)
             out = part.matmul_data_t(t, state, out)
         return out
-        
-        
 
 
 class _Feedback:
@@ -1135,4 +1129,3 @@ class _Feedback:
         Raise an error when the dims of the e_ops / state don't match.
         Tell the dims to the feedback for reconstructing the Qobj.
         """
-        
